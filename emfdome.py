@@ -11,15 +11,18 @@ import sys
 import colorsys
 import threading
 import random
+from twitterkeys import *
  
 STEP = 100
 DELAY = 0.5
 
-# Twitter Keys
+# OAUTH2 Keys, imported from twitterkeys
+'''
 APP_KEY = ''
 APP_SECRET = ''
 ACCESS_KEY = ''
 ACCESS_SECRET = ''
+'''
 
 # servo to pin mapping
 #R = '4'
@@ -31,8 +34,7 @@ B = '24'
 
 # Keyword
 WATCH = '@emfdome'
-
-mode = '#ffffff'
+mode = 'fade'
 
 def pwm(pin, angle):
     cmd = "echo " + str(pin) + "=" + str(angle) + " > /dev/pi-blaster"
@@ -47,6 +49,7 @@ def test_tweet(thing):
         pass
 
 def parse_colour(tweet):
+
     parts = tweet.lower().split(" ")
     for i in range(len(parts)):
         if parts[i] == 'fade':
@@ -65,6 +68,9 @@ def parse_colour(tweet):
     m = re.search('(\d+ \d+ \d+)', tweet.lower())
     if m:
         return m.group(0)
+    else:
+        print('Couldn\'t parse %s' % tweet)
+        return None
 
 def set_colour(tweet):
     r = None
@@ -79,7 +85,7 @@ def set_colour(tweet):
                 g = value[1]
                 b = value[2]
             except: 
-                print foo[i] + ' is not a webcolor'
+                print foo[i] + ' is not a valid webcolor'
                 pass
         else:
             value = test_tweet(foo[i])
@@ -204,7 +210,7 @@ def main():
         currentmode = main_loop(currentmode)
 
 def main_loop(currentmode):
-    if currentmode != mode:
+    if currentmode != mode and mode is not None:
         print 'Changing mode: %s' % mode
         if mode == 'fade':
             fade_all()
@@ -222,15 +228,15 @@ def main_loop(currentmode):
     time.sleep(1)
     return currentmode
 
-
 class MyStreamer(TwythonStreamer):
     def on_success(self, data):
         global mode
         if 'text' in data:
             tweet = data['text'].encode('utf-8')
             print 'Received tweet: %s' % tweet
-            #set_colour(tweet)
-            mode = parse_colour(tweet)
+            response = parse_colour(tweet)
+            if response is not None:
+                mode = response
 
     def on_error(self, status_code, data):
         print 'Twitter error %s' % status_code
