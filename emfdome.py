@@ -54,15 +54,21 @@ def parse_colour(tweet):
     for i in range(len(parts)):
         if parts[i] in presets:
             return presets[parts[i]]
+        elif parts[i][0] == '#':
+            try:
+                value = webcolors.hex_to_rgb(parts[i])
+                mode = "%s %s %s" % (str(value[0]), str(value[1]), str(value[2]))
+                return mode
+            except:
+                print('%s is not a webcolor' % str(parts[i]))
+                pass
 
     # Look for a trio of digits
     m = re.search('(\d+ \d+ \d+)', tweet.lower())
     if m:
         return m.group(0)
-    else:
-        print('Couldn\'t parse %s' % tweet)
 
-    print("parse_colour returning None")
+    print('Couldn\'t parse %s' % tweet)
     return None
 
 
@@ -73,24 +79,14 @@ def set_colour(tweet):
 
     foo = tweet.split(" ")
     for i in range(len(foo)):
-        if re.search('^#', foo[i]):
-            try:
-                value = webcolors.hex_to_rgb(foo[i])
-                r = value[0]
-                g = value[1]
-                b = value[2]
-            except:
-                print foo[i] + ' is not a valid webcolor'
-                pass
-        else:
-            value = test_tweet(foo[i])
-            if value is not None:
-                if r is None:
-                    r = int(value)
-                elif g is None:
-                    g = int(value)
-                elif b is None:
-                    b = int(value)
+        value = test_tweet(foo[i])
+        if value is not None:
+            if r is None:
+                r = int(value)
+            elif g is None:
+                g = int(value)
+            elif b is None:
+                b = int(value)
     print('set_color calling set_rgb with (%s, %s, %s)' % (r, g, b))
     set_rgb(pins, (r, g, b))
     
