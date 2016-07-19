@@ -1,5 +1,5 @@
 from decimal import *
-import os, threading
+import os
 
 class LightStrip(object):
 
@@ -22,7 +22,3 @@ class LightStrip(object):
             self.pwm(self.pins['B'], b)
         else:
             print 'Invalid RGB value. RGB needs to be between 0 and 255'
-
-
-
-
