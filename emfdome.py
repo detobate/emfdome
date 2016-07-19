@@ -29,7 +29,6 @@ pins = {'R': 4,
 
 # Keyword
 WATCH = '@emfdome'
-mode = 'fade'
 
 # Was using tuples for predefined colours, but managing another type was becoming a pain
 presets = {'blue': '0 0 255',
@@ -41,13 +40,6 @@ presets = {'blue': '0 0 255',
             'police': 'police',
             'cycle': 'cycle'
            }
-
-def test_tweet(thing):
-    try: 
-        float(thing)
-        return thing
-    except ValueError: 
-        pass
 
 def parse_colour(tweet):
 
@@ -81,7 +73,10 @@ def set_colour(leds, tweet):
 
     foo = tweet.split(" ")
     for i in range(len(foo)):
-        value = test_tweet(foo[i])
+        try:
+            value = float(foo[i])
+        except:
+            value = None
         if value is not None:
             if r is None:
                 r = int(value)
