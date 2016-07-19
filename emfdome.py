@@ -1,10 +1,9 @@
 #!/usr/bin/python
-
-import re, threading, webcolors, Queue
 from twython import TwythonStreamer
+import re, webcolors, Queue, threading
 from twitterkeys import *
 from emfdome import *
- 
+
 STEP = 100
 DELAY = 0.5
 
@@ -17,13 +16,16 @@ ACCESS_SECRET = ''
 """
 
 # servo to pin mapping
-#R = '4'
-#G = '17'
-#B = '18'
 pins = {'R': 18,
         'G': 23,
         'B': 24
          }
+
+""" Alternative mappings
+pins = {'R': 4,
+        'G': 17,
+        'B': 18
+        } """
 
 # Keyword
 WATCH = '@emfdome'
@@ -72,7 +74,7 @@ def parse_colour(tweet):
     return None
 
 
-def set_colour(tweet):
+def set_colour(leds, tweet):
     r = None
     g = None
     b = None
@@ -88,47 +90,21 @@ def set_colour(tweet):
             elif b is None:
                 b = int(value)
     print('set_color calling set_rgb with (%s, %s, %s)' % (r, g, b))
-    set_rgb(pins, (r, g, b))
-    
+    leds.set_rgb((r, g, b))
 
+def start_preset(leds, mode):
+    preset = Presets(leds)
+    preset.change(mode)
 
-def main():
+def start_twitter():
+    stream = MyStreamer(APP_KEY, APP_SECRET, ACCESS_KEY, ACCESS_SECRET)
+    stream.statuses.filter(track=WATCH)
 
-    # Create a globally available queue that our twitter thread can add to
-    global queue
-    queue = Queue.Queue(42)
-    print('Starting Twitter Listener')
-    start_twitter_thread()
-
-    while True:
-        if queue.empty():
-            time.sleep(1)
-            pass
-        else:
-            newTweet = queue.get()
-            if newTweet is not None:
-                # Keep track of the current mode although we don't do anything with it yet
-                current_mode = main_loop(newTweet)
-            queue.task_done()
-
-
-def main_loop(mode):
-    print('Changing mode: %s' % str(mode))
-    if mode == 'fade':
-        fade_all(pins, queue)    # We still need to pass queue to functions from modules, because py namespaces.
-    elif mode == 'random':
-        random_colours(pins, queue)
-    elif mode == 'randstrobe':
-        randstrobe(pins, queue)
-    elif mode == 'strobe':
-        strobe(pins, queue)
-    elif mode == 'police':
-        police(pins, queue)
-    else:
-        set_colour(mode)
-    currentmode = mode  # This assumes we get a match. Should probably fix
-    return currentmode
-
+def start_twitter_thread():
+    t = threading.Thread(target=start_twitter)
+    t.daemon = True
+    t.start()
+    print "Twitter listener thread started"
 
 class MyStreamer(TwythonStreamer):
 
@@ -144,16 +120,41 @@ class MyStreamer(TwythonStreamer):
     def on_error(self, status_code, data):
         print('Twitter error %s' % status_code)
 
-def start_twitter():
-    stream = MyStreamer(APP_KEY, APP_SECRET, ACCESS_KEY, ACCESS_SECRET)
-    stream.statuses.filter(track=WATCH)
+def main():
 
-def start_twitter_thread():
-    t = threading.Thread(target=start_twitter)
-    t.daemon = True
-    t.start()
-    print "Twitter listener thread started"
+    # Create a globally available queue that our twitter thread can add to
+    global queue
+    queue = Queue.Queue(42)
+    # Create a LightStrip object with the defined pins
+    leds = LightStrip(pins)
+    print('Starting Twitter Listener')
+    start_twitter_thread()
+
+    while True:
+        if queue.empty():
+            time.sleep(1)
+            pass
+        else:
+            newTweet = queue.get()
+            if newTweet is not None:
+                change_mode(newTweet, leds)
+            queue.task_done()
+
+
+def change_mode(mode, leds):
+    print('Changing mode to: %s' % str(mode))
+    # This is a bit lame, could do with a tidy up at some point
+    if mode in presets:
+        print('Starting preset thread with mode %s' % mode)
+        p = threading.Thread(target=start_preset, args=(leds,mode))
+        p.daemon = True
+        p.start()
+
+    else:
+        set_colour(leds, mode)
+
+    # Keep track of the current mode
+    leds.mode = mode  # This assumes we get a match. Should probably fix
 
 if __name__ == "__main__":
     main()
-
