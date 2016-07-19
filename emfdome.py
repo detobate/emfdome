@@ -4,8 +4,12 @@ import re, webcolors, Queue, threading
 from twitterkeys import *
 from emfdome import *
 
+# Keyword
+WATCH = '@emfdome'
 STEP = 100
 DELAY = 0.5
+
+DEBUG = True
 
 # OAUTH2 Keys, imported from twitterkeys
 """
@@ -20,15 +24,6 @@ pins = {'R': 18,
         'G': 23,
         'B': 24
          }
-
-""" Alternative mappings
-pins = {'R': 4,
-        'G': 17,
-        'B': 18
-        } """
-
-# Keyword
-WATCH = '@emfdome'
 
 # Was using tuples for predefined colours, but managing another type was becoming a pain
 presets = {'blue': '0 0 255',
@@ -84,7 +79,8 @@ def set_colour(leds, tweet):
                 g = int(value)
             elif b is None:
                 b = int(value)
-    print('set_color calling set_rgb with (%s, %s, %s)' % (r, g, b))
+    if DEBUG:
+        print('set_color calling set_rgb with (%s, %s, %s)' % (r, g, b))
     leds.set_rgb((r, g, b))
 
 def start_preset(leds, mode):
@@ -109,7 +105,8 @@ class MyStreamer(TwythonStreamer):
             print('Received tweet: %s' % str(tweet))
             response = parse_colour(tweet)
             if response is not None:
-                print('on_success adding %s to the queue' % str(response))
+                if DEBUG:
+                    print('on_success adding %s to the queue' % str(response))
                 queue.put(response)
 
     def on_error(self, status_code, data):
@@ -132,15 +129,18 @@ def main():
         else:
             newTweet = queue.get()
             if newTweet is not None:
+                leds.mode = None    # Stop the preset loop first to avoid a race condition.
                 change_mode(newTweet, leds)
             queue.task_done()
 
 
 def change_mode(mode, leds):
-    print('Changing mode to: %s' % str(mode))
+    if DEBUG:
+        print('Changing mode to: %s' % str(mode))
     # This is a bit lame, could do with a tidy up at some point
     if mode in presets:
-        print('Starting preset thread with mode %s' % mode)
+        if DEBUG:
+            print('Starting preset thread with mode %s' % mode)
         p = threading.Thread(target=start_preset, args=(leds,mode))
         p.daemon = True
         p.start()
