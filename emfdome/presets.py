@@ -1,6 +1,9 @@
 import colorsys, random, time
 
 class Presets(object):
+    """ Preset object class contains blocking loops for preset modes
+        and should be threaded. Loops are killed by another thread setting leds.mode
+        to None or a different mode """
 
     def __init__(self, leds):
         self.leds = leds

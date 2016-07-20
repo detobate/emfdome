@@ -117,7 +117,7 @@ def main():
     # Create a globally available queue that our twitter thread can add to
     global queue
     queue = Queue.Queue(42)
-    # Create a LightStrip object with the defined pins
+    # Create a LightStrip object with the pre-defined pins
     leds = LightStrip(pins)
     print('Starting Twitter Listener')
     start_twitter_thread()
@@ -137,7 +137,7 @@ def main():
 def change_mode(mode, leds):
     if DEBUG:
         print('Changing mode to: %s' % str(mode))
-    # This is a bit lame, could do with a tidy up at some point
+    # This isn't lame anymore. Huzzah
     if mode in presets:
         if DEBUG:
             print('Starting preset thread with mode %s' % mode)
