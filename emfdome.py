@@ -29,11 +29,15 @@ pins = {'R': 18,
 presets = {'blue': '0 0 255',
             'red': '255 0 0',
             'green': '0 255 0',
+            'white': '255 255 255',
             'fade': 'fade',
             'strobe': 'strobe',
             'randstrobe': 'randstrobe',
             'police': 'police',
-            'cycle': 'cycle'
+            'cycle': 'cycle',
+            'stop': '0 0 0',
+            'off':  '0 0 0',
+            'clear': '0 0 0'
            }
 
 def parse_colour(tweet):

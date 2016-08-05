@@ -45,6 +45,9 @@ class Presets(object):
                 self.leds.set_rgb((r, g, b))
                 time.sleep(0.1)
 
+        elif mode == 'stop' or mode == 'clear' or mode == 'off':
+            self.leds.set_rgb((0,0,0))
+
         elif mode == 'fade':
             h = 0
             s = 1
